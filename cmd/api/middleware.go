@@ -57,6 +57,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			}
 
 			mu.Lock()
+			defer mu.Unlock()
 
 			_, ok := clients[ip]
 			if !ok {
@@ -65,11 +66,9 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 			if !clients[ip].limiter.Allow() {
 				app.rateLimitExceeded(w, r)
-				mu.Unlock()
 				return
 			}
 			clients[ip].lastSeen = time.Now()
-			mu.Unlock()
 		}
 		next.ServeHTTP(w, r)
 	})
